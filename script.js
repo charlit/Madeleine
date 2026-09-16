@@ -1,7 +1,14 @@
 (() => {
   const COLS = 6;
   const ROWS = 8;
-  const CAT_FACES = ['🐱', '😺', '😸', '😻', '🐈', '🙀'];
+  const CAT_TYPES = [
+    { face: '🐱', hue: 28 },   // orange tabby
+    { face: '😻', hue: 330 },  // pink heart-eyes
+    { face: '😸', hue: 200 },  // sky blue
+    { face: '🙀', hue: 265 },  // violet
+    { face: '🐈‍⬛', hue: 0, sat: 0, light: 22 }, // black cat, neutral tile
+    { face: '🐈', hue: 140 },  // green
+  ];
   const GAME_DURATION = 45;
   const BEST_SCORE_KEY = 'madeleine_best_score';
 
@@ -26,12 +33,12 @@
   let busy = false;
   let running = false;
 
-  function randomFace(excludeChecks) {
-    let face;
+  function randomType(excludeChecks) {
+    let type;
     do {
-      face = CAT_FACES[Math.floor(Math.random() * CAT_FACES.length)];
-    } while (excludeChecks && excludeChecks(face));
-    return face;
+      type = Math.floor(Math.random() * CAT_TYPES.length);
+    } while (excludeChecks && excludeChecks(type));
+    return type;
   }
 
   function idx(r, c) { return r * COLS + c; }
@@ -40,15 +47,25 @@
     grid = new Array(ROWS * COLS).fill(null);
     for (let r = 0; r < ROWS; r++) {
       for (let c = 0; c < COLS; c++) {
-        grid[idx(r, c)] = randomFace((face) => {
+        grid[idx(r, c)] = randomType((type) => {
           const left1 = c >= 1 ? grid[idx(r, c - 1)] : null;
           const left2 = c >= 2 ? grid[idx(r, c - 2)] : null;
           const up1 = r >= 1 ? grid[idx(r - 1, c)] : null;
           const up2 = r >= 2 ? grid[idx(r - 2, c)] : null;
-          return (face === left1 && face === left2) || (face === up1 && face === up2);
+          return (type === left1 && type === left2) || (type === up1 && type === up2);
         });
       }
     }
+  }
+
+  function paintTile(tile, typeId) {
+    const type = CAT_TYPES[typeId];
+    tile.textContent = type.face;
+    tile.style.setProperty('--hue', type.hue);
+    if (type.sat !== undefined) tile.style.setProperty('--tile-sat', type.sat + '%');
+    else tile.style.removeProperty('--tile-sat');
+    if (type.light !== undefined) tile.style.setProperty('--tile-light', type.light + '%');
+    else tile.style.removeProperty('--tile-light');
   }
 
   function renderBoard() {
@@ -62,7 +79,7 @@
         tile.className = 'tile';
         tile.dataset.r = r;
         tile.dataset.c = c;
-        tile.textContent = grid[idx(r, c)];
+        paintTile(tile, grid[idx(r, c)]);
         tile.addEventListener('click', onTileClick);
         boardEl.appendChild(tile);
         tileEls[idx(r, c)] = tile;
@@ -72,7 +89,7 @@
 
   function syncTileFace(r, c) {
     const tile = tileEls[idx(r, c)];
-    tile.textContent = grid[idx(r, c)] || '';
+    paintTile(tile, grid[idx(r, c)]);
     tile.classList.remove('matched');
   }
 
@@ -204,7 +221,7 @@
         }
       }
       for (let r = writeRow; r >= 0; r--) {
-        grid[idx(r, c)] = randomFace();
+        grid[idx(r, c)] = randomType();
       }
     }
   }
@@ -213,7 +230,7 @@
     for (let r = 0; r < ROWS; r++) {
       for (let c = 0; c < COLS; c++) {
         const tile = tileEls[idx(r, c)];
-        tile.textContent = grid[idx(r, c)];
+        paintTile(tile, grid[idx(r, c)]);
         tile.classList.remove('matched');
         tile.classList.add('falling');
       }

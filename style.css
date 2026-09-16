@@ -129,7 +129,7 @@ body {
 
 .tile {
   border-radius: var(--tile-radius);
-  background: var(--card-bg);
+  background: hsl(var(--hue, 320) var(--tile-sat, 72%) var(--tile-light, 86%));
   display: flex;
   align-items: center;
   justify-content: center;
