@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "madeleine-qa",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["netlify", "dev"],
+      "port": 8888,
+      "autoPort": true
+    }
+  ]
+}
