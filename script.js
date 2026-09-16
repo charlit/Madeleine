@@ -2,12 +2,12 @@
   const COLS = 6;
   const ROWS = 8;
   const CAT_TYPES = [
-    { face: '🐱', hue: 28 },   // orange tabby
-    { face: '😻', hue: 330 },  // pink heart-eyes
-    { face: '😸', hue: 200 },  // sky blue
-    { face: '🙀', hue: 265 },  // violet
-    { face: '🐈‍⬛', hue: 0, sat: 0, light: 22 }, // black cat, neutral tile
-    { face: '🐈', hue: 140 },  // green
+    { svg: catFaceSVG('tabby'), hue: 28 },    // orange tabby
+    { svg: catFaceSVG('heart'), hue: 330 },   // pink heart-eyes
+    { svg: catFaceSVG('sparkle'), hue: 200 }, // sky blue, starry eyes
+    { svg: catFaceSVG('surprised'), hue: 265 }, // violet, big-eyed
+    { svg: catFaceSVG('black'), hue: 0, sat: 0, light: 22 }, // black cat, neutral tile
+    { svg: catFaceSVG('wink'), hue: 140 },    // green, winking
   ];
   const GAME_DURATION = 45;
   const BEST_SCORE_KEY = 'madeleine_best_score';
@@ -150,12 +150,131 @@
 
   function paintTile(tile, typeId) {
     const type = CAT_TYPES[typeId];
-    tile.textContent = type.face;
+    tile.innerHTML = type.svg;
     tile.style.setProperty('--hue', type.hue);
     if (type.sat !== undefined) tile.style.setProperty('--tile-sat', type.sat + '%');
     else tile.style.removeProperty('--tile-sat');
     if (type.light !== undefined) tile.style.setProperty('--tile-light', type.light + '%');
     else tile.style.removeProperty('--tile-light');
+  }
+
+  // ---- Illustrations de chats kawaii (SVG dessiné à la main, pas de photo) ----
+  function catEars(fur, inner) {
+    return `<path d="M18,34 L8,6 L34,22 Z" fill="${fur}"/>
+      <path d="M82,34 L92,6 L66,22 Z" fill="${fur}"/>
+      <path d="M21,29 L15,14 L31,23 Z" fill="${inner}"/>
+      <path d="M79,29 L85,14 L69,23 Z" fill="${inner}"/>`;
+  }
+
+  function catHead(fur) {
+    return `<ellipse cx="50" cy="58" rx="38" ry="34" fill="${fur}"/>`;
+  }
+
+  function catNose(color) {
+    return `<path d="M46,64 L54,64 L50,69 Z" fill="${color}"/>`;
+  }
+
+  function catMouth(color) {
+    return `<path d="M42,70 Q46,75 50,70 Q54,75 58,70" stroke="${color}" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+  }
+
+  function catMouthO(color) {
+    return `<ellipse cx="50" cy="72" rx="3.5" ry="4.5" fill="${color}"/>`;
+  }
+
+  function catWhiskers(color) {
+    return `<g stroke="${color}" stroke-width="1.5" stroke-linecap="round" opacity="0.6">
+      <path d="M13,58 L1,55"/><path d="M13,64 L1,65"/><path d="M13,70 L2,75"/>
+      <path d="M87,58 L99,55"/><path d="M87,64 L99,65"/><path d="M87,70 L98,75"/>
+    </g>`;
+  }
+
+  function catBlush(color) {
+    return `<ellipse cx="23" cy="63" rx="6.5" ry="4" fill="${color}" opacity="0.55"/>
+      <ellipse cx="77" cy="63" rx="6.5" ry="4" fill="${color}" opacity="0.55"/>`;
+  }
+
+  function catStar(cx, cy, r, color) {
+    return `<path d="M${cx},${cy - r} L${cx + r * 0.35},${cy - r * 0.35} L${cx + r},${cy} L${cx + r * 0.35},${cy + r * 0.35} L${cx},${cy + r} L${cx - r * 0.35},${cy + r * 0.35} L${cx - r},${cy} L${cx - r * 0.35},${cy - r * 0.35} Z" fill="${color}"/>`;
+  }
+
+  function eyesNormal(color) {
+    return `<ellipse cx="36" cy="54" rx="7" ry="9" fill="${color}"/><ellipse cx="64" cy="54" rx="7" ry="9" fill="${color}"/>
+      <circle cx="33.5" cy="50" r="2" fill="#fff"/><circle cx="61.5" cy="50" r="2" fill="#fff"/>`;
+  }
+
+  function eyesHeart(color) {
+    const heart = (cx, cy) => `<path d="M${cx},${cy + 5} C${cx - 8},${cy - 3} ${cx - 8},${cy - 9} ${cx},${cy - 4} C${cx + 8},${cy - 9} ${cx + 8},${cy - 3} ${cx},${cy + 5} Z" fill="${color}"/>`;
+    return heart(36, 54) + heart(64, 54);
+  }
+
+  function eyesSparkle(color, starColor) {
+    return `<ellipse cx="36" cy="54" rx="7" ry="9" fill="${color}"/><ellipse cx="64" cy="54" rx="7" ry="9" fill="${color}"/>
+      ${catStar(34, 51, 3, starColor)}${catStar(62, 51, 3, starColor)}`;
+  }
+
+  function eyesSurprised(color) {
+    return `<circle cx="36" cy="55" r="10" fill="#fff" stroke="${color}" stroke-width="2"/>
+      <circle cx="64" cy="55" r="10" fill="#fff" stroke="${color}" stroke-width="2"/>
+      <circle cx="36" cy="57" r="4.5" fill="${color}"/><circle cx="64" cy="57" r="4.5" fill="${color}"/>`;
+  }
+
+  function eyesWink(color) {
+    return `<path d="M28,54 Q36,60 44,54" stroke="${color}" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <ellipse cx="64" cy="54" rx="7" ry="9" fill="${color}"/><circle cx="61.5" cy="50" r="2" fill="#fff"/>`;
+  }
+
+  function eyesGlow(color) {
+    return `<ellipse cx="36" cy="54" rx="7" ry="9" fill="${color}"/><ellipse cx="64" cy="54" rx="7" ry="9" fill="${color}"/>
+      <rect x="34.5" y="48" width="3" height="12" rx="1.5" fill="#1a1020"/><rect x="62.5" y="48" width="3" height="12" rx="1.5" fill="#1a1020"/>`;
+  }
+
+  function catBow(cx, cy, color) {
+    return `<path d="M${cx - 8},${cy} L${cx - 1},${cy - 4} L${cx - 1},${cy + 4} Z M${cx + 8},${cy} L${cx + 1},${cy - 4} L${cx + 1},${cy + 4} Z" fill="${color}"/>
+      <circle cx="${cx}" cy="${cy}" r="2" fill="${color}"/>`;
+  }
+
+  function catFaceSVG(kind) {
+    const presets = {
+      tabby: {
+        fur: '#f5a94e', ear: '#ffd9a0', nose: '#c9683a', mouth: '#7a3f1a', whisker: '#7a3f1a',
+        eyes: eyesNormal('#3a2313'), blush: '#ff9fc2',
+        extra: `<path d="M38,17 Q50,24 62,17" stroke="#d98a3f" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.7"/>`,
+      },
+      heart: {
+        fur: '#ffb3d1', ear: '#ff7fae', nose: '#e0507f', mouth: '#a2355f', whisker: '#a2355f',
+        eyes: eyesHeart('#ff4f7b'), blush: '#ff7fae',
+        extra: catBow(24, 20, '#ff4f7b'),
+      },
+      sparkle: {
+        fur: '#bfe4ff', ear: '#8fd0ff', nose: '#4a90c9', mouth: '#2c5f85', whisker: '#2c5f85',
+        eyes: eyesSparkle('#2c5f85', '#fff3b0'), blush: '#ffb3c9',
+      },
+      surprised: {
+        fur: '#d9c7ff', ear: '#b79aff', nose: '#7c5cff', mouth: null, whisker: '#6a4fd1',
+        eyes: eyesSurprised('#7c5cff'), blush: null,
+        mouthOverride: catMouthO('#7c5cff'),
+      },
+      black: {
+        fur: '#332942', ear: '#4a3a5e', nose: '#241c30', mouth: 'rgba(255,255,255,0.45)', whisker: '#fff',
+        eyes: eyesGlow('#9dffb0'), blush: null,
+      },
+      wink: {
+        fur: '#b8e6b0', ear: '#8fd486', nose: '#3e7a37', mouth: '#2f5c2a', whisker: '#2f5c2a',
+        eyes: eyesWink('#2f5c2a'), blush: '#ffb3c9',
+      },
+    };
+    const p = presets[kind];
+    return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      ${catEars(p.fur, p.ear)}
+      ${catHead(p.fur)}
+      ${p.eyes}
+      ${catNose(p.nose)}
+      ${p.mouthOverride || (p.mouth ? catMouth(p.mouth) : '')}
+      ${p.blush ? catBlush(p.blush) : ''}
+      ${p.extra || ''}
+      ${catWhiskers(p.whisker)}
+    </svg>`;
   }
 
   function renderBoard() {

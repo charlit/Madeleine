@@ -133,11 +133,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.6rem;
   box-shadow: 0 2px 0 rgba(0,0,0,0.08), inset 0 0 0 1px rgba(255,255,255,0.6);
   cursor: pointer;
   transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.18s ease;
   position: relative;
+}
+
+.tile svg {
+  width: 82%;
+  height: 82%;
 }
 
 .tile.selected {
