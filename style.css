@@ -214,6 +214,56 @@ body {
   opacity: 0.85;
 }
 
+.badge-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin: 2px 0 16px;
+}
+
+.badge-visual {
+  width: 104px;
+  height: 104px;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.25));
+}
+
+.badge-visual svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.sparkle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: twinkle 1.4s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.75); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sparkle { animation: none; opacity: 0.9; }
+}
+
+.badge-label {
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: var(--accent-dark);
+  text-align: center;
+}
+
+.badge-sub {
+  font-size: 0.78rem;
+  color: var(--text-dark);
+  opacity: 0.75;
+  text-align: center;
+  font-weight: 600;
+}
+
 .final-score-label {
   font-size: 0.8rem;
   text-transform: uppercase;

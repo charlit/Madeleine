@@ -19,6 +19,10 @@
   const overlayEl = document.getElementById('overlay');
   const overlayTitleEl = document.getElementById('overlayTitle');
   const overlaySubtitleEl = document.getElementById('overlaySubtitle');
+  const badgeWrapEl = document.getElementById('badgeWrap');
+  const badgeVisualEl = document.getElementById('badgeVisual');
+  const badgeLabelEl = document.getElementById('badgeLabel');
+  const badgeSubEl = document.getElementById('badgeSub');
   const finalScoreWrapEl = document.getElementById('finalScoreWrap');
   const finalScoreEl = document.getElementById('finalScore');
   const bestScoreLineEl = document.getElementById('bestScoreLine');
@@ -252,6 +256,56 @@
     setTimeout(() => float.remove(), 700);
   }
 
+  const TIER_INFO = {
+    choco: { label: 'Madeleine au chocolat', sub: 'Score > 600 — un délicieux glaçage bien mérité.' },
+    golden: { label: 'Madeleine dorée au four', sub: 'Score > 800 — cuite à la perfection.' },
+    queen: { label: 'Reine des Madeleines', sub: 'Score > 1000 — la couronne te revient !' },
+  };
+
+  function tierForScore(s) {
+    if (s > 1000) return 'queen';
+    if (s > 800) return 'golden';
+    if (s > 600) return 'choco';
+    return null;
+  }
+
+  function star(cx, cy, r) {
+    return `<path class="sparkle" d="M${cx},${cy - r} L${cx + r * 0.3},${cy - r * 0.3} L${cx + r},${cy} L${cx + r * 0.3},${cy + r * 0.3} L${cx},${cy + r} L${cx - r * 0.3},${cy + r * 0.3} L${cx - r},${cy} L${cx - r * 0.3},${cy - r * 0.3} Z" fill="#fff3b0"/>`;
+  }
+
+  function madeleineSVG(tier) {
+    const shell = 'M60 82 C24 82 12 54 17 29 C22 9 42 4 60 4 C78 4 98 9 103 29 C108 54 96 82 60 82 Z';
+    const ridges = [-30, -15, 0, 15, 30].map((dx) =>
+      `<path d="M60,78 Q${60 + dx / 2},40 ${60 + dx},10" stroke="rgba(0,0,0,0.18)" stroke-width="2" fill="none" stroke-linecap="round"/>`
+    ).join('');
+
+    const gradients = {
+      choco: '<linearGradient id="mgrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a5636"/><stop offset="1" stop-color="#3c2314"/></linearGradient>',
+      golden: '<linearGradient id="mgrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd27a"/><stop offset="1" stop-color="#df8f28"/></linearGradient>',
+      queen: '<linearGradient id="mgrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset="1" stop-color="#f0b429"/></linearGradient>',
+    };
+
+    let extras = '';
+    if (tier === 'choco') {
+      extras = `<path d="M22,20 Q35,10 48,22 Q61,34 74,20 Q87,8 100,22" stroke="#f6e6d8" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.85"/>`;
+    } else if (tier === 'golden') {
+      extras = star(14, 16, 5) + star(104, 24, 4) + star(96, 70, 3.5);
+    } else if (tier === 'queen') {
+      extras = star(18, 14, 4) + star(102, 18, 4) +
+        `<path d="M38,4 L44,-16 L60,-2 L76,-16 L82,4 Z" fill="url(#mgrad)" stroke="#b9791a" stroke-width="1.5"/>
+         <circle cx="44" cy="-11" r="3" fill="#ff5f6d"/>
+         <circle cx="60" cy="-4" r="3.2" fill="#5fb4ff"/>
+         <circle cx="76" cy="-11" r="3" fill="#5fe08a"/>`;
+    }
+
+    return `<svg viewBox="0 -20 120 106" xmlns="http://www.w3.org/2000/svg">
+      <defs>${gradients[tier]}</defs>
+      <path d="${shell}" fill="url(#mgrad)" stroke="rgba(0,0,0,0.2)" stroke-width="1.5"/>
+      ${ridges}
+      ${extras}
+    </svg>`;
+  }
+
   function tick() {
     timeLeft -= 1;
     if (timeLeft < 0) timeLeft = 0;
@@ -271,6 +325,7 @@
     timeEl.textContent = GAME_DURATION;
     timerBarEl.style.width = '100%';
     timerBarEl.classList.remove('low');
+    badgeWrapEl.classList.add('hidden');
     selected = null;
     busy = false;
     running = true;
@@ -291,6 +346,17 @@
 
     overlayTitleEl.textContent = 'Temps écoulé !';
     overlaySubtitleEl.textContent = 'Bien joué, Madeleine ronronne de fierté.';
+
+    const tier = tierForScore(score);
+    if (tier) {
+      badgeVisualEl.innerHTML = madeleineSVG(tier);
+      badgeLabelEl.textContent = TIER_INFO[tier].label;
+      badgeSubEl.textContent = TIER_INFO[tier].sub;
+      badgeWrapEl.classList.remove('hidden');
+    } else {
+      badgeWrapEl.classList.add('hidden');
+    }
+
     finalScoreWrapEl.classList.remove('hidden');
     finalScoreEl.textContent = score;
     bestScoreLineEl.textContent = 'Meilleur score : ' + best;
