@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Madeleine 🐱</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">🐱 Madeleine</div>
+      <div class="stats">
+        <div class="stat">
+          <span class="stat-label">Score</span>
+          <span class="stat-value" id="score">0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Temps</span>
+          <span class="stat-value" id="time">45</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="timer-bar-track">
+      <div class="timer-bar" id="timerBar"></div>
+    </div>
+
+    <main class="board-wrap">
+      <div id="board" class="board"></div>
+    </main>
+
+    <div id="overlay" class="overlay">
+      <div class="overlay-card">
+        <h1 id="overlayTitle">Madeleine 🐱</h1>
+        <p id="overlaySubtitle">Aligne 3 têtes de chat identiques avant la fin du temps !</p>
+        <div id="badgeWrap" class="badge-wrap hidden">
+          <div class="badge-visual" id="badgeVisual"></div>
+          <div class="badge-label" id="badgeLabel"></div>
+          <div class="badge-sub" id="badgeSub"></div>
+        </div>
+        <div id="finalScoreWrap" class="hidden">
+          <div class="final-score-label">Score final</div>
+          <div id="finalScore" class="final-score">0</div>
+          <div id="bestScoreLine" class="best-score-line"></div>
+        </div>
+        <div id="saveArea" class="save-area hidden">
+          <input id="pseudoField" class="pseudo-field" type="text" maxlength="14" placeholder="Ton pseudo (optionnel)" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" name="pseudoField_no_autofill">
+          <button id="saveScoreBtn" class="ghost-btn">Enregistrer mon score</button>
+          <div id="saveStatus" class="save-status"></div>
+        </div>
+        <div class="actions-row">
+          <button id="startBtn" class="start-btn">Jouer</button>
+          <button id="topScoresBtn" class="ghost-btn">Top 10</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="leaderboardModal" class="lb-modal hidden">
+      <div class="lb-box">
+        <h2>Top 10 🐱</h2>
+        <div id="lbContent"><p class="lb-msg">Chargement…</p></div>
+        <button id="closeLbBtn" class="start-btn">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

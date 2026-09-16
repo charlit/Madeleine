@@ -1,0 +1,11 @@
+services:
+  madeleine:
+    build: .
+    container_name: madeleine
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - PORT=8083
