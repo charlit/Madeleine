@@ -407,8 +407,8 @@
 
     setTimeout(() => {
       matches.forEach((i) => { grid[i] = null; });
-      collapseAndRefill();
-      renderGridFaces();
+      const changed = collapseAndRefill();
+      renderGridFaces(changed);
 
       const nextMatches = findMatches();
       if (nextMatches.size > 0) {
@@ -420,32 +420,36 @@
   }
 
   function collapseAndRefill() {
+    const changed = new Set();
     for (let c = 0; c < COLS; c++) {
       let writeRow = ROWS - 1;
       for (let r = ROWS - 1; r >= 0; r--) {
         if (grid[idx(r, c)] !== null) {
-          grid[idx(writeRow, c)] = grid[idx(r, c)];
-          if (writeRow !== r) grid[idx(r, c)] = null;
+          if (writeRow !== r) {
+            grid[idx(writeRow, c)] = grid[idx(r, c)];
+            grid[idx(r, c)] = null;
+            changed.add(idx(writeRow, c));
+          }
           writeRow--;
         }
       }
       for (let r = writeRow; r >= 0; r--) {
         grid[idx(r, c)] = randomType();
+        changed.add(idx(r, c));
       }
     }
+    return changed;
   }
 
-  function renderGridFaces() {
-    for (let r = 0; r < ROWS; r++) {
-      for (let c = 0; c < COLS; c++) {
-        const tile = tileEls[idx(r, c)];
-        paintTile(tile, grid[idx(r, c)]);
-        tile.classList.remove('matched');
-        tile.classList.add('falling');
-      }
-    }
+  function renderGridFaces(changed) {
+    changed.forEach((i) => {
+      const tile = tileEls[i];
+      paintTile(tile, grid[i]);
+      tile.classList.remove('matched');
+      tile.classList.add('falling');
+    });
     setTimeout(() => {
-      tileEls.forEach((t) => t.classList.remove('falling'));
+      changed.forEach((i) => tileEls[i].classList.remove('falling'));
     }, 230);
   }
 
