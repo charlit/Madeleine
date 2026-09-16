@@ -27,6 +27,14 @@
   const finalScoreEl = document.getElementById('finalScore');
   const bestScoreLineEl = document.getElementById('bestScoreLine');
   const startBtn = document.getElementById('startBtn');
+  const topScoresBtn = document.getElementById('topScoresBtn');
+  const saveAreaEl = document.getElementById('saveArea');
+  const pseudoFieldEl = document.getElementById('pseudoField');
+  const saveScoreBtn = document.getElementById('saveScoreBtn');
+  const saveStatusEl = document.getElementById('saveStatus');
+  const leaderboardModalEl = document.getElementById('leaderboardModal');
+  const lbContentEl = document.getElementById('lbContent');
+  const closeLbBtn = document.getElementById('closeLbBtn');
 
   let grid = [];
   let tileEls = [];
@@ -36,6 +44,84 @@
   let selected = null;
   let busy = false;
   let running = false;
+
+  // ---- Classement en ligne (TOP 10 partagé entre tous les joueurs) ----
+  // Backend : Netlify Function + Netlify Blobs (voir netlify/functions/scores.js)
+  const SCORES_API = '/api/scores';
+
+  async function fetchLeaderboard() {
+    try {
+      const res = await fetch(SCORES_API, { cache: 'no-store' });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async function submitScore(name, scoreValue) {
+    try {
+      const res = await fetch(SCORES_API, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ name, score: scoreValue }),
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    }[c]));
+  }
+
+  function renderLeaderboardList(list) {
+    if (!list) {
+      lbContentEl.innerHTML = '<p class="lb-msg">Classement indisponible pour le moment.</p>';
+      return;
+    }
+    if (list.length === 0) {
+      lbContentEl.innerHTML = '<p class="lb-msg">Aucun score enregistré pour l\'instant.<br>Sois le premier !</p>';
+      return;
+    }
+    const items = list.slice(0, 10).map((entry, i) => {
+      const safeName = escapeHtml(String(entry.name || 'Anonyme').slice(0, 14));
+      return '<li><span class="lb-rank">#' + (i + 1) + '</span>' +
+        '<span class="lb-name">' + safeName + '</span>' +
+        '<span class="lb-score">' + Math.floor(entry.score) + '</span></li>';
+    }).join('');
+    lbContentEl.innerHTML = '<ul class="lb-list">' + items + '</ul>';
+  }
+
+  async function openLeaderboard() {
+    leaderboardModalEl.classList.remove('hidden');
+    lbContentEl.innerHTML = '<p class="lb-msg">Chargement…</p>';
+    const list = await fetchLeaderboard();
+    renderLeaderboardList(list);
+  }
+
+  topScoresBtn.addEventListener('click', openLeaderboard);
+  closeLbBtn.addEventListener('click', () => {
+    leaderboardModalEl.classList.add('hidden');
+  });
+
+  saveScoreBtn.addEventListener('click', async () => {
+    let name = (pseudoFieldEl.value || '').trim().slice(0, 14);
+    if (!name) name = 'Anonyme';
+    saveScoreBtn.disabled = true;
+    saveStatusEl.textContent = 'Enregistrement…';
+    const result = await submitScore(name, score);
+    if (result) {
+      saveStatusEl.textContent = 'Score enregistré !';
+    } else {
+      saveStatusEl.textContent = "Échec de l'enregistrement, réessaie.";
+      saveScoreBtn.disabled = false;
+    }
+  });
 
   function randomType(excludeChecks) {
     let type;
@@ -326,6 +412,7 @@
     timerBarEl.style.width = '100%';
     timerBarEl.classList.remove('low');
     badgeWrapEl.classList.add('hidden');
+    saveAreaEl.classList.add('hidden');
     selected = null;
     busy = false;
     running = true;
@@ -361,6 +448,12 @@
     finalScoreEl.textContent = score;
     bestScoreLineEl.textContent = 'Meilleur score : ' + best;
     startBtn.textContent = 'Rejouer';
+
+    pseudoFieldEl.value = '';
+    saveStatusEl.textContent = '';
+    saveScoreBtn.disabled = false;
+    saveAreaEl.classList.remove('hidden');
+
     overlayEl.classList.remove('hidden');
   }
 

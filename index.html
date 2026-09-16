@@ -44,7 +44,23 @@
           <div id="finalScore" class="final-score">0</div>
           <div id="bestScoreLine" class="best-score-line"></div>
         </div>
-        <button id="startBtn" class="start-btn">Jouer</button>
+        <div id="saveArea" class="save-area hidden">
+          <input id="pseudoField" class="pseudo-field" type="text" maxlength="14" placeholder="Ton pseudo (optionnel)" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" name="pseudoField_no_autofill">
+          <button id="saveScoreBtn" class="ghost-btn">Enregistrer mon score</button>
+          <div id="saveStatus" class="save-status"></div>
+        </div>
+        <div class="actions-row">
+          <button id="startBtn" class="start-btn">Jouer</button>
+          <button id="topScoresBtn" class="ghost-btn">Top 10</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="leaderboardModal" class="lb-modal hidden">
+      <div class="lb-box">
+        <h2>Top 10 🐱</h2>
+        <div id="lbContent"><p class="lb-msg">Chargement…</p></div>
+        <button id="closeLbBtn" class="start-btn">Fermer</button>
       </div>
     </div>
   </div>
