@@ -9,3 +9,12 @@ services:
       - ./data:/app/data
     environment:
       - PORT=8083
+
+  arena:
+    build: ./arena
+    container_name: arena
+    restart: unless-stopped
+    ports:
+      - "8084:8084"
+    environment:
+      - PORT=8084
