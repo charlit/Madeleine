@@ -19,6 +19,7 @@
   const BASE_SPEED = 230;
   const MAX_SPEED = 430;
   const HURT_DURATION = 480;
+  const READY_DURATION = 1300; // brief pause before the world starts scrolling, so the skyline (and its first "M") is readable
 
   // ---- pixel-art cat sprite sheets (80x64 frames) ----
   const FRAME_W = 80;
@@ -34,13 +35,14 @@
     hurt: { img: loadSheet('assets/cat/hurt.png'), frames: 4 },
   };
 
-  let state = 'menu'; // 'menu' | 'running' | 'hurt' | 'over'
+  let state = 'menu'; // 'menu' | 'ready' | 'running' | 'hurt' | 'over'
   let score = 0;
   let best = 0;
   let dist = 0;
   let speed = BASE_SPEED;
   let lastTime = 0;
   let hurtStart = 0;
+  let readyStart = 0;
 
   let catY = 0;       // 0 = grounded, negative = height above ground
   let catVY = 0;
@@ -92,9 +94,13 @@
     return windows;
   }
 
+  const WORD_GAP_EXTRA = 55; // extra empty stretch after the word's last letter, before it restarts
+
   function makeLetterBuilding(x) {
-    const letter = MADELEINE_LETTERS[letterCycleIndex % MADELEINE_LETTERS.length];
+    const idx = letterCycleIndex % MADELEINE_LETTERS.length;
+    const letter = MADELEINE_LETTERS[idx];
     letterCycleIndex++;
+    const isWordEnd = idx === MADELEINE_LETTERS.length - 1;
     const w = 84 + Math.random() * 20;
     const h = 160 + Math.random() * 70;
     return {
@@ -103,6 +109,7 @@
       letter,
       windows: windowsForLetter(letter),
       sign: Math.random() < 0.16,
+      isWordEnd,
     };
   }
 
@@ -121,7 +128,7 @@
     while (x < W + 500) {
       const b = makeLetterBuilding(x);
       midBuildings.push(b);
-      x += b.w + 14 + Math.random() * 24;
+      x += b.w + 14 + Math.random() * 24 + (b.isWordEnd ? WORD_GAP_EXTRA : 0);
     }
     stars = [];
     for (let i = 0; i < 40; i++) {
@@ -134,7 +141,8 @@
     while (layer.length && layer[0].x + layer[0].w < -spanPadding) {
       const b = layer.shift();
       const last = layer[layer.length - 1];
-      const newX = last.x + last.w + 12 + Math.random() * 24;
+      const extraGap = last.isWordEnd ? WORD_GAP_EXTRA : 0;
+      const newX = last.x + last.w + 12 + Math.random() * 24 + extraGap;
       if (b.windows) {
         const fresh = makeLetterBuilding(newX);
         Object.assign(b, fresh);
@@ -484,7 +492,8 @@
 
   function startGame() {
     resetGame();
-    state = 'running';
+    state = 'ready';
+    readyStart = performance.now();
     overlayEl.classList.add('hidden');
     lastTime = performance.now();
     requestAnimationFrame(loop);
@@ -556,7 +565,11 @@
   function loop(now) {
     const dt = Math.min(0.033, (now - lastTime) / 1000);
     lastTime = now;
-    if (state === 'running') {
+    if (state === 'ready') {
+      render();
+      if (now - readyStart > READY_DURATION) state = 'running';
+      requestAnimationFrame(loop);
+    } else if (state === 'running') {
       update(dt);
       render();
       requestAnimationFrame(loop);
