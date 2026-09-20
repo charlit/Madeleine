@@ -81,7 +81,7 @@
     N: ['10001', '11001', '10101', '10101', '10011', '10001', '10001'],
   };
   const MADELEINE_LETTERS = 'MADELEINE'.split('');
-  const FILLER_SLOTS = 2; // plain (non-letter) buildings shown between word repeats
+  const FILLER_SLOTS = 4; // plain (non-letter) buildings shown between word repeats
   const CYCLE_LENGTH = MADELEINE_LETTERS.length + FILLER_SLOTS;
   let letterCycleIndex = 0;
 
