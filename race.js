@@ -81,6 +81,8 @@
     N: ['10001', '11001', '10101', '10101', '10011', '10001', '10001'],
   };
   const MADELEINE_LETTERS = 'MADELEINE'.split('');
+  const FILLER_SLOTS = 2; // plain (non-letter) buildings shown between word repeats
+  const CYCLE_LENGTH = MADELEINE_LETTERS.length + FILLER_SLOTS;
   let letterCycleIndex = 0;
 
   function windowsForLetter(letter) {
@@ -94,22 +96,47 @@
     return windows;
   }
 
-  const WORD_GAP_EXTRA = 55; // extra empty stretch after the word's last letter, before it restarts
+  function randomPlainWindows(cols, rows) {
+    const windows = [];
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (Math.random() < 0.35) windows.push({ c, r });
+      }
+    }
+    return windows;
+  }
 
   function makeLetterBuilding(x) {
-    const idx = letterCycleIndex % MADELEINE_LETTERS.length;
-    const letter = MADELEINE_LETTERS[idx];
+    const idx = letterCycleIndex % CYCLE_LENGTH;
     letterCycleIndex++;
-    const isWordEnd = idx === MADELEINE_LETTERS.length - 1;
-    const w = 84 + Math.random() * 20;
-    const h = 160 + Math.random() * 70;
+
+    if (idx < MADELEINE_LETTERS.length) {
+      const letter = MADELEINE_LETTERS[idx];
+      const isWordEnd = idx === MADELEINE_LETTERS.length - 1;
+      const w = 84 + Math.random() * 20;
+      const h = 160 + Math.random() * 70;
+      return {
+        x, w, h,
+        cols: 5, rows: 7,
+        letter,
+        windows: windowsForLetter(letter),
+        sign: Math.random() < 0.16,
+        isWordEnd,
+      };
+    }
+
+    // plain filler building, shown between one "MADELEINE" and the next
+    const w = 70 + Math.random() * 60;
+    const h = 90 + Math.random() * 130;
+    const cols = Math.max(2, Math.floor(w / 18));
+    const rows = Math.max(2, Math.floor(h / 22));
     return {
       x, w, h,
-      cols: 5, rows: 7,
-      letter,
-      windows: windowsForLetter(letter),
-      sign: Math.random() < 0.16,
-      isWordEnd,
+      cols, rows,
+      letter: null,
+      windows: randomPlainWindows(cols, rows),
+      sign: Math.random() < 0.12,
+      isWordEnd: false,
     };
   }
 
@@ -128,7 +155,7 @@
     while (x < W + 500) {
       const b = makeLetterBuilding(x);
       midBuildings.push(b);
-      x += b.w + 14 + Math.random() * 24 + (b.isWordEnd ? WORD_GAP_EXTRA : 0);
+      x += b.w + 14 + Math.random() * 24;
     }
     stars = [];
     for (let i = 0; i < 40; i++) {
@@ -141,8 +168,7 @@
     while (layer.length && layer[0].x + layer[0].w < -spanPadding) {
       const b = layer.shift();
       const last = layer[layer.length - 1];
-      const extraGap = last.isWordEnd ? WORD_GAP_EXTRA : 0;
-      const newX = last.x + last.w + 12 + Math.random() * 24 + extraGap;
+      const newX = last.x + last.w + 12 + Math.random() * 24;
       if (b.windows) {
         const fresh = makeLetterBuilding(newX);
         Object.assign(b, fresh);
