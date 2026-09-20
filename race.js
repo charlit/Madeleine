@@ -152,7 +152,9 @@
     midBuildings = [];
     x = 0;
     letterCycleIndex = 0;
-    while (x < W + 500) {
+    // keep going until we clear the screen AND have seeded at least one full
+    // MADELEINE + filler cycle, so the word is never cut short at game start
+    while (x < W + 500 || midBuildings.length < CYCLE_LENGTH) {
       const b = makeLetterBuilding(x);
       midBuildings.push(b);
       x += b.w + 14 + Math.random() * 24;
