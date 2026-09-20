@@ -13,9 +13,9 @@
   const GROUND_Y = 500;
   const GRAVITY = 1700;
   const JUMP_VELOCITY = -600;
-  const CAT_X = 78;
-  const CAT_W = 34;
-  const CAT_H = 42;
+  const CAT_X = 90;
+  const CAT_W = 42;
+  const CAT_H = 54;
   const BASE_SPEED = 230;
   const MAX_SPEED = 430;
   const HURT_DURATION = 480;
@@ -23,8 +23,8 @@
   // ---- pixel-art cat sprite sheets (80x64 frames) ----
   const FRAME_W = 80;
   const FRAME_H = 64;
-  const DRAW_W = 62;
-  const DRAW_H = 50;
+  const DRAW_W = 100;
+  const DRAW_H = 80;
   function loadSheet(src) { const img = new Image(); img.src = src; return img; }
   const sheets = {
     idle: { img: loadSheet('assets/cat/idle.png'), frames: 8 },
@@ -385,12 +385,17 @@
     const img = sheet.img;
     if (!img.complete || !img.naturalWidth) return;
 
+    // sheets face left by default; mirror so the cat faces right (its running direction)
     ctx.imageSmoothingEnabled = false;
+    ctx.save();
+    ctx.translate(x, footY);
+    ctx.scale(-1, 1);
     ctx.drawImage(
       img,
       frameIndex * FRAME_W, 0, FRAME_W, FRAME_H,
-      x - DRAW_W / 2, footY - DRAW_H, DRAW_W, DRAW_H
+      -DRAW_W / 2, -DRAW_H, DRAW_W, DRAW_H
     );
+    ctx.restore();
   }
 
   function catFootY() {
