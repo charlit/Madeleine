@@ -358,7 +358,7 @@
     const phase = (runDistance / strideLen) * Math.PI * 2;
 
     // legs (drawn first, behind body)
-    ctx.strokeStyle = '#c97a2e';
+    ctx.strokeStyle = '#3f3e46';
     ctx.lineWidth = 5;
     ctx.lineCap = 'round';
     const hipY = bodyCY + bodyH / 2 - 2;
@@ -382,7 +382,7 @@
 
     // tail
     const tailSway = Math.sin(performance.now() / 260) * 0.4;
-    ctx.strokeStyle = '#f5a94e';
+    ctx.strokeStyle = '#9b9aa8';
     ctx.lineWidth = 7;
     ctx.beginPath();
     ctx.moveTo(bodyCX - bodyLen / 2 + 4, bodyCY);
@@ -393,13 +393,13 @@
     ctx.stroke();
 
     // body
-    ctx.fillStyle = '#f5a94e';
+    ctx.fillStyle = '#9b9aa8';
     ctx.beginPath();
     ctx.ellipse(bodyCX, bodyCY, bodyLen / 2, bodyH / 2, 0, 0, Math.PI * 2);
     ctx.fill();
 
     // tabby stripes
-    ctx.strokeStyle = '#c97a2e';
+    ctx.strokeStyle = '#3f3e46';
     ctx.lineWidth = 3;
     ctx.lineCap = 'round';
     for (const dx of [-10, 0, 10]) {
@@ -413,7 +413,7 @@
     const headCX = bodyCX + bodyLen / 2 - 2;
     const headCY = bodyCY - bodyH / 2 - 8;
     const headR = 13;
-    ctx.fillStyle = '#f5a94e';
+    ctx.fillStyle = '#9b9aa8';
     ctx.beginPath();
     ctx.moveTo(headCX - headR * 0.6, headCY - headR * 0.9);
     ctx.lineTo(headCX - headR * 1.1, headCY - headR * 1.9);
@@ -431,11 +431,11 @@
     ctx.fill();
 
     // face
-    ctx.fillStyle = '#2a1c10';
+    ctx.fillStyle = '#1c1c22';
     ctx.beginPath();
     ctx.arc(headCX + 5, headCY - 1, 2.2, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = '#c9683a';
+    ctx.fillStyle = '#5a5962';
     ctx.beginPath();
     ctx.moveTo(headCX + headR - 2, headCY + 3);
     ctx.lineTo(headCX + headR + 3, headCY + 5);
