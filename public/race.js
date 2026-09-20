@@ -14,21 +14,37 @@
   const GRAVITY = 1700;
   const JUMP_VELOCITY = -600;
   const CAT_X = 78;
-  const CAT_W = 40;
-  const CAT_H = 44;
+  const CAT_W = 34;
+  const CAT_H = 42;
   const BASE_SPEED = 230;
   const MAX_SPEED = 430;
+  const HURT_DURATION = 480;
 
-  let state = 'menu'; // 'menu' | 'running' | 'over'
+  // ---- pixel-art cat sprite sheets (80x64 frames) ----
+  const FRAME_W = 80;
+  const FRAME_H = 64;
+  const DRAW_W = 62;
+  const DRAW_H = 50;
+  function loadSheet(src) { const img = new Image(); img.src = src; return img; }
+  const sheets = {
+    idle: { img: loadSheet('assets/cat/idle.png'), frames: 8 },
+    run: { img: loadSheet('assets/cat/run.png'), frames: 8 },
+    jump: { img: loadSheet('assets/cat/running-jump.png'), frames: 3 },
+    hurt: { img: loadSheet('assets/cat/hurt.png'), frames: 4 },
+  };
+
+  let state = 'menu'; // 'menu' | 'running' | 'hurt' | 'over'
   let score = 0;
   let best = 0;
   let dist = 0;
   let speed = BASE_SPEED;
   let lastTime = 0;
+  let hurtStart = 0;
 
   let catY = 0;       // 0 = grounded, negative = height above ground
   let catVY = 0;
   let jumping = false;
+  let jumpStart = 0;
   let runDist = 0;    // used to drive the leg animation cycle
 
   let obstacles = [];
@@ -348,110 +364,33 @@
     drawMadeleineIcon(sx, GROUND_Y - c.h, c.bob);
   }
 
-  function drawTabbyCat(x, footY, runDistance, isJumping) {
-    ctx.save();
-    ctx.translate(x, footY);
-
-    const bodyLen = 40, bodyH = 20;
-    const bodyCX = -4, bodyCY = -CAT_H + 18;
-    const strideLen = 34;
-    const phase = (runDistance / strideLen) * Math.PI * 2;
-
-    // legs (drawn first, behind body)
-    ctx.strokeStyle = '#3f3e46';
-    ctx.lineWidth = 5;
-    ctx.lineCap = 'round';
-    const hipY = bodyCY + bodyH / 2 - 2;
-    const legPairs = isJumping
-      ? [{ hipX: bodyCX - 10, angle: -0.9 }, { hipX: bodyCX + 12, angle: -0.5 }]
-      : [
-          { hipX: bodyCX - 10, angle: Math.sin(phase) * 0.9 },
-          { hipX: bodyCX + 12, angle: Math.sin(phase + Math.PI) * 0.9 },
-        ];
-    for (const leg of legPairs) {
-      const kneeX = leg.hipX + Math.sin(leg.angle) * 14;
-      const kneeY = hipY + Math.cos(leg.angle) * 14;
-      const footX = leg.hipX + Math.sin(leg.angle) * 22;
-      const footY2 = Math.min(0, hipY + Math.cos(leg.angle) * 22);
-      ctx.beginPath();
-      ctx.moveTo(leg.hipX, hipY);
-      ctx.lineTo(kneeX, kneeY);
-      ctx.lineTo(footX, footY2);
-      ctx.stroke();
+  function drawCatSprite(x, footY, runDistance, isJumping, isHurt, hurtElapsed) {
+    let sheet, frameIndex;
+    if (isHurt) {
+      sheet = sheets.hurt;
+      frameIndex = Math.min(sheet.frames - 1, Math.floor((hurtElapsed / HURT_DURATION) * sheet.frames));
+    } else if (isJumping) {
+      sheet = sheets.jump;
+      const jumpElapsed = performance.now() - jumpStart;
+      frameIndex = Math.min(sheet.frames - 1, Math.floor(jumpElapsed / 140));
+    } else if (state === 'running') {
+      sheet = sheets.run;
+      const strideLen = 26;
+      frameIndex = Math.floor((runDistance / strideLen) % sheet.frames);
+    } else {
+      sheet = sheets.idle;
+      frameIndex = Math.floor(performance.now() / 140) % sheet.frames;
     }
 
-    // tail
-    const tailSway = Math.sin(performance.now() / 260) * 0.4;
-    ctx.strokeStyle = '#9b9aa8';
-    ctx.lineWidth = 7;
-    ctx.beginPath();
-    ctx.moveTo(bodyCX - bodyLen / 2 + 4, bodyCY);
-    ctx.quadraticCurveTo(
-      bodyCX - bodyLen / 2 - 16, bodyCY - 6 + tailSway * 10,
-      bodyCX - bodyLen / 2 - 10, bodyCY - 26 + tailSway * 14
+    const img = sheet.img;
+    if (!img.complete || !img.naturalWidth) return;
+
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(
+      img,
+      frameIndex * FRAME_W, 0, FRAME_W, FRAME_H,
+      x - DRAW_W / 2, footY - DRAW_H, DRAW_W, DRAW_H
     );
-    ctx.stroke();
-
-    // body
-    ctx.fillStyle = '#9b9aa8';
-    ctx.beginPath();
-    ctx.ellipse(bodyCX, bodyCY, bodyLen / 2, bodyH / 2, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // tabby stripes
-    ctx.strokeStyle = '#3f3e46';
-    ctx.lineWidth = 3;
-    ctx.lineCap = 'round';
-    for (const dx of [-10, 0, 10]) {
-      ctx.beginPath();
-      ctx.moveTo(bodyCX + dx, bodyCY - bodyH / 2 + 2);
-      ctx.quadraticCurveTo(bodyCX + dx + 4, bodyCY, bodyCX + dx, bodyCY + bodyH / 2 - 2);
-      ctx.stroke();
-    }
-
-    // head
-    const headCX = bodyCX + bodyLen / 2 - 2;
-    const headCY = bodyCY - bodyH / 2 - 8;
-    const headR = 13;
-    ctx.fillStyle = '#9b9aa8';
-    ctx.beginPath();
-    ctx.moveTo(headCX - headR * 0.6, headCY - headR * 0.9);
-    ctx.lineTo(headCX - headR * 1.1, headCY - headR * 1.9);
-    ctx.lineTo(headCX - headR * 0.1, headCY - headR * 1.0);
-    ctx.closePath();
-    ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(headCX + headR * 0.5, headCY - headR * 0.9);
-    ctx.lineTo(headCX + headR * 1.0, headCY - headR * 1.9);
-    ctx.lineTo(headCX + headR * 0.05, headCY - headR * 1.0);
-    ctx.closePath();
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(headCX, headCY, headR, 0, Math.PI * 2);
-    ctx.fill();
-
-    // face
-    ctx.fillStyle = '#1c1c22';
-    ctx.beginPath();
-    ctx.arc(headCX + 5, headCY - 1, 2.2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#5a5962';
-    ctx.beginPath();
-    ctx.moveTo(headCX + headR - 2, headCY + 3);
-    ctx.lineTo(headCX + headR + 3, headCY + 5);
-    ctx.lineTo(headCX + headR - 2, headCY + 7);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-    ctx.lineWidth = 1;
-    for (const dy of [-2, 1, 4]) {
-      ctx.beginPath();
-      ctx.moveTo(headCX + headR + 2, headCY + dy);
-      ctx.lineTo(headCX + headR + 12, headCY + dy - 1);
-      ctx.stroke();
-    }
-
-    ctx.restore();
   }
 
   function catFootY() {
@@ -480,6 +419,7 @@
   function doJump() {
     if (state !== 'running' || jumping) return;
     jumping = true;
+    jumpStart = performance.now();
     catVY = JUMP_VELOCITY;
   }
 
@@ -489,6 +429,11 @@
     const catTop = catFootY() - CAT_H;
     const catBottom = catFootY();
     return catRight > box.left && catLeft < box.right && catBottom > box.top && catTop < box.bottom;
+  }
+
+  function triggerHurt() {
+    state = 'hurt';
+    hurtStart = performance.now();
   }
 
   function endGame() {
@@ -541,7 +486,7 @@
       const right = left + o.w;
       const box = { left, right, top: GROUND_Y - o.h, bottom: GROUND_Y };
       if (checkCollision(box)) {
-        endGame();
+        triggerHurt();
         return;
       }
     }
@@ -574,7 +519,9 @@
     for (const c of collectibles) drawCollectible(c, dist);
     for (const o of obstacles) drawObstacle(o, dist);
 
-    drawTabbyCat(CAT_X, catFootY(), runDist, jumping);
+    const isHurt = state === 'hurt' || state === 'over';
+    const hurtElapsed = isHurt ? performance.now() - hurtStart : 0;
+    drawCatSprite(CAT_X, catFootY(), runDist, jumping, isHurt, hurtElapsed);
   }
 
   function loop(now) {
@@ -584,6 +531,13 @@
       update(dt);
       render();
       requestAnimationFrame(loop);
+    } else if (state === 'hurt') {
+      render();
+      if (now - hurtStart > HURT_DURATION) {
+        endGame();
+      } else {
+        requestAnimationFrame(loop);
+      }
     } else if (state === 'over') {
       render();
     }
