@@ -25,6 +25,7 @@
   const FRAME_H = 64;
   const DRAW_W = 100;
   const DRAW_H = 80;
+  const SPRITE_FOOT_ROW = 48; // where the paws sit within the 64px-tall source frame
   function loadSheet(src) { const img = new Image(); img.src = src; return img; }
   const sheets = {
     idle: { img: loadSheet('assets/cat/idle.png'), frames: 8 },
@@ -385,6 +386,11 @@
     const img = sheet.img;
     if (!img.complete || !img.naturalWidth) return;
 
+    // The cat's paws sit around row 48 of each 64px-tall frame, not at the
+    // very bottom (there's transparent padding below) — shift the draw so
+    // the paws, not the empty frame edge, land on the ground line.
+    const footOffset = (FRAME_H - SPRITE_FOOT_ROW) * (DRAW_H / FRAME_H);
+
     // sheets face left by default; mirror so the cat faces right (its running direction)
     ctx.imageSmoothingEnabled = false;
     ctx.save();
@@ -393,7 +399,7 @@
     ctx.drawImage(
       img,
       frameIndex * FRAME_W, 0, FRAME_W, FRAME_H,
-      -DRAW_W / 2, -DRAW_H, DRAW_W, DRAW_H
+      -DRAW_W / 2, -DRAW_H + footOffset, DRAW_W, DRAW_H
     );
     ctx.restore();
   }
