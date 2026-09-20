@@ -68,6 +68,44 @@
   // World generation (parallax city layers)
   // ---------------------------------------------------------------------
 
+  // ---- window-lit letters spelling MADELEINE across the mid-ground buildings ----
+  const LETTER_PATTERNS = {
+    M: ['10001', '11011', '10101', '10101', '10001', '10001', '10001'],
+    A: ['01110', '10001', '10001', '11111', '10001', '10001', '10001'],
+    D: ['11110', '10001', '10001', '10001', '10001', '10001', '11110'],
+    E: ['11111', '10000', '10000', '11110', '10000', '10000', '11111'],
+    L: ['10000', '10000', '10000', '10000', '10000', '10000', '11111'],
+    I: ['11111', '00100', '00100', '00100', '00100', '00100', '11111'],
+    N: ['10001', '11001', '10101', '10101', '10011', '10001', '10001'],
+  };
+  const MADELEINE_LETTERS = 'MADELEINE'.split('');
+  let letterCycleIndex = 0;
+
+  function windowsForLetter(letter) {
+    const pattern = LETTER_PATTERNS[letter];
+    const windows = [];
+    for (let r = 0; r < pattern.length; r++) {
+      for (let c = 0; c < pattern[r].length; c++) {
+        if (pattern[r][c] === '1') windows.push({ c, r });
+      }
+    }
+    return windows;
+  }
+
+  function makeLetterBuilding(x) {
+    const letter = MADELEINE_LETTERS[letterCycleIndex % MADELEINE_LETTERS.length];
+    letterCycleIndex++;
+    const w = 84 + Math.random() * 20;
+    const h = 160 + Math.random() * 70;
+    return {
+      x, w, h,
+      cols: 5, rows: 7,
+      letter,
+      windows: windowsForLetter(letter),
+      sign: Math.random() < 0.16,
+    };
+  }
+
   function seedSkyline() {
     farBuildings = [];
     let x = 0;
@@ -79,23 +117,11 @@
     }
     midBuildings = [];
     x = 0;
-    let sinceSign = 0;
+    letterCycleIndex = 0;
     while (x < W + 500) {
-      const w = 70 + Math.random() * 60;
-      const h = 90 + Math.random() * 130;
-      sinceSign++;
-      const showSign = sinceSign >= 3 && Math.random() < 0.5;
-      if (showSign) sinceSign = 0;
-      const windows = [];
-      const cols = Math.max(2, Math.floor(w / 18));
-      const rows = Math.max(2, Math.floor(h / 22));
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          if (Math.random() < 0.35) windows.push({ c, r });
-        }
-      }
-      midBuildings.push({ x, w, h, windows, cols, rows, sign: showSign });
-      x += w + 14 + Math.random() * 24;
+      const b = makeLetterBuilding(x);
+      midBuildings.push(b);
+      x += b.w + 14 + Math.random() * 24;
     }
     stars = [];
     for (let i = 0; i < 40; i++) {
@@ -108,20 +134,12 @@
     while (layer.length && layer[0].x + layer[0].w < -spanPadding) {
       const b = layer.shift();
       const last = layer[layer.length - 1];
-      b.x = last.x + last.w + 12 + Math.random() * 24;
+      const newX = last.x + last.w + 12 + Math.random() * 24;
       if (b.windows) {
-        b.w = 70 + Math.random() * 60;
-        b.h = 90 + Math.random() * 130;
-        b.cols = Math.max(2, Math.floor(b.w / 18));
-        b.rows = Math.max(2, Math.floor(b.h / 22));
-        b.windows = [];
-        for (let r = 0; r < b.rows; r++) {
-          for (let c = 0; c < b.cols; c++) {
-            if (Math.random() < 0.35) b.windows.push({ c, r });
-          }
-        }
-        b.sign = Math.random() < 0.16;
+        const fresh = makeLetterBuilding(newX);
+        Object.assign(b, fresh);
       } else {
+        b.x = newX;
         b.w = 60 + Math.random() * 70;
         b.h = 120 + Math.random() * 180;
       }
