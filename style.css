@@ -368,18 +368,9 @@ body {
 }
 
 a.race-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  display: inline-block;
   text-decoration: none;
   box-sizing: border-box;
-}
-
-.race-link-icon {
-  height: 22px;
-  width: auto;
-  image-rendering: pixelated;
-  display: block;
 }
 
 .lb-modal {
