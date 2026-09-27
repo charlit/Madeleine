@@ -16,11 +16,22 @@
     <div id="overlay">
       <h1>Madeleine <span>Course</span></h1>
       <p class="tagline">COURSE DE NUIT À RIOMS</p>
-      <button id="btnStart" type="button">DÉMARRER</button>
+      <div class="actions-row">
+        <button id="btnStart" type="button">DÉMARRER</button>
+        <button id="topScoresBtn" type="button" class="ghost-btn">Top 10</button>
+      </div>
       <p style="margin-top:14px;">Espace / Clic / Tap = Sauter</p>
       <p>Évite les plots, barrières et bouches d'égout</p>
       <p>Attrape les madeleines dorées !</p>
       <p class="credit"><a href="index.html">← Retour à Madeleine</a></p>
+    </div>
+
+    <div id="leaderboardModal" class="lb-modal hidden">
+      <div class="lb-box">
+        <h2>Top 10 🐱</h2>
+        <div id="lbContent"><p class="lb-msg">Chargement…</p></div>
+        <button id="closeLbBtn" type="button">Fermer</button>
+      </div>
     </div>
   </div>
 

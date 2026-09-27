@@ -8,6 +8,10 @@
   const bestEl = document.getElementById('best');
   const overlayEl = document.getElementById('overlay');
   const btnStart = document.getElementById('btnStart');
+  const topScoresBtn = document.getElementById('topScoresBtn');
+  const leaderboardModalEl = document.getElementById('leaderboardModal');
+  const lbContentEl = document.getElementById('lbContent');
+  const closeLbBtn = document.getElementById('closeLbBtn');
 
   const BEST_KEY = 'madeleine_race_best';
   const GROUND_Y = 500;
@@ -65,6 +69,70 @@
   function writeBest(v) {
     try { localStorage.setItem(BEST_KEY, String(v)); } catch (e) { /* ignore */ }
   }
+
+  // ---- Classement en ligne (TOP 10 partagé, distinct de celui du match-3) ----
+  // Backend : Netlify Function + Netlify Blobs (voir netlify/functions/race-scores.js)
+  const SCORES_API = '/api/race-scores';
+
+  async function fetchLeaderboard() {
+    try {
+      const res = await fetch(SCORES_API, { cache: 'no-store' });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async function submitScore(name, scoreValue) {
+    try {
+      const res = await fetch(SCORES_API, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ name, score: scoreValue }),
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    }[c]));
+  }
+
+  function renderLeaderboardList(list) {
+    if (!list) {
+      lbContentEl.innerHTML = '<p class="lb-msg">Classement indisponible pour le moment.</p>';
+      return;
+    }
+    if (list.length === 0) {
+      lbContentEl.innerHTML = '<p class="lb-msg">Aucun score enregistré pour l\'instant.<br>Sois le premier !</p>';
+      return;
+    }
+    const items = list.slice(0, 10).map((entry, i) => {
+      const safeName = escapeHtml(String(entry.name || 'Anonyme').slice(0, 14));
+      return '<li><span class="lb-rank">#' + (i + 1) + '</span>' +
+        '<span class="lb-name">' + safeName + '</span>' +
+        '<span class="lb-score">' + Math.floor(entry.score) + '</span></li>';
+    }).join('');
+    lbContentEl.innerHTML = '<ul class="lb-list">' + items + '</ul>';
+  }
+
+  async function openLeaderboard() {
+    leaderboardModalEl.classList.remove('hidden');
+    lbContentEl.innerHTML = '<p class="lb-msg">Chargement…</p>';
+    const list = await fetchLeaderboard();
+    renderLeaderboardList(list);
+  }
+
+  topScoresBtn.addEventListener('click', openLeaderboard);
+  closeLbBtn.addEventListener('click', () => {
+    leaderboardModalEl.classList.add('hidden');
+  });
 
   // ---------------------------------------------------------------------
   // World generation (parallax city layers)
@@ -507,15 +575,42 @@
     writeBest(best);
     bestEl.textContent = 'MEILLEUR ' + best;
 
+    const finalScore = Math.floor(score);
     overlayEl.innerHTML =
       '<h1>Aïe ! 🙀</h1>' +
       '<p class="final-label">Score</p>' +
-      '<div class="final-score">' + Math.floor(score) + '</div>' +
+      '<div class="final-score">' + finalScore + '</div>' +
       '<p style="margin-bottom:18px;">Meilleur score : ' + best + '</p>' +
-      '<button id="btnStart" type="button">REJOUER</button>' +
+      '<div id="saveArea" class="save-area">' +
+        '<input id="pseudoField" class="pseudo-field" type="text" maxlength="14" placeholder="Ton pseudo (optionnel)" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" name="pseudoField_no_autofill">' +
+        '<button id="saveScoreBtn" type="button" class="ghost-btn">Enregistrer mon score</button>' +
+        '<div id="saveStatus" class="save-status"></div>' +
+      '</div>' +
+      '<div class="actions-row">' +
+        '<button id="btnStart" type="button">REJOUER</button>' +
+        '<button id="topScoresBtnOver" type="button" class="ghost-btn">Top 10</button>' +
+      '</div>' +
       '<p class="credit"><a href="index.html">← Retour à Madeleine</a></p>';
     overlayEl.classList.remove('hidden');
     document.getElementById('btnStart').addEventListener('click', startGame);
+    document.getElementById('topScoresBtnOver').addEventListener('click', openLeaderboard);
+
+    const pseudoFieldEl = document.getElementById('pseudoField');
+    const saveScoreBtn = document.getElementById('saveScoreBtn');
+    const saveStatusEl = document.getElementById('saveStatus');
+    saveScoreBtn.addEventListener('click', async () => {
+      let name = (pseudoFieldEl.value || '').trim().slice(0, 14);
+      if (!name) name = 'Anonyme';
+      saveScoreBtn.disabled = true;
+      saveStatusEl.textContent = 'Enregistrement…';
+      const result = await submitScore(name, finalScore);
+      if (result) {
+        saveStatusEl.textContent = 'Score enregistré !';
+      } else {
+        saveStatusEl.textContent = "Échec de l'enregistrement, réessaie.";
+        saveScoreBtn.disabled = false;
+      }
+    });
   }
 
   function startGame() {

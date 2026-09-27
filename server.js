@@ -10,7 +10,6 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 8083;
 const DATA_DIR = path.join(__dirname, 'data');
-const SCORES_FILE = path.join(DATA_DIR, 'scores.json');
 const MAX_ENTRIES = 10;
 const MAX_SCORE = 100000;
 
@@ -33,26 +32,34 @@ function writeJson(file, data) {
   fs.writeFileSync(file, JSON.stringify(data), 'utf-8');
 }
 
-// ---- /api/scores : identique à netlify/functions/scores.js ----
-app.get('/api/scores', (req, res) => {
-  const list = readJson(SCORES_FILE, []);
-  res.json(list);
-});
+// ---- route générique TOP 10, réutilisée pour le match-3 et la course ----
+function registerScoreRoutes(routePath, scoresFile) {
+  app.get(routePath, (req, res) => {
+    const list = readJson(scoresFile, []);
+    res.json(list);
+  });
 
-app.post('/api/scores', (req, res) => {
-  let name = String((req.body && req.body.name) || 'Anonyme').trim().slice(0, 14);
-  if (!name) name = 'Anonyme';
-  const score = Math.floor(Number(req.body && req.body.score));
-  if (!Number.isFinite(score) || score < 0 || score > MAX_SCORE) {
-    return res.status(400).json({ error: 'invalid score' });
-  }
-  let list = readJson(SCORES_FILE, []);
-  list.push({ name, score, date: Date.now() });
-  list.sort((a, b) => b.score - a.score);
-  list = list.slice(0, MAX_ENTRIES);
-  writeJson(SCORES_FILE, list);
-  res.json(list);
-});
+  app.post(routePath, (req, res) => {
+    let name = String((req.body && req.body.name) || 'Anonyme').trim().slice(0, 14);
+    if (!name) name = 'Anonyme';
+    const score = Math.floor(Number(req.body && req.body.score));
+    if (!Number.isFinite(score) || score < 0 || score > MAX_SCORE) {
+      return res.status(400).json({ error: 'invalid score' });
+    }
+    let list = readJson(scoresFile, []);
+    list.push({ name, score, date: Date.now() });
+    list.sort((a, b) => b.score - a.score);
+    list = list.slice(0, MAX_ENTRIES);
+    writeJson(scoresFile, list);
+    res.json(list);
+  });
+}
+
+// ---- /api/scores (match-3) : identique à netlify/functions/scores.js ----
+registerScoreRoutes('/api/scores', path.join(DATA_DIR, 'scores.json'));
+
+// ---- /api/race-scores (course) : identique à netlify/functions/race-scores.js ----
+registerScoreRoutes('/api/race-scores', path.join(DATA_DIR, 'race-scores.json'));
 
 app.listen(PORT, () => {
   console.log('Madeleine auto-hébergé, écoute sur le port ' + PORT);
